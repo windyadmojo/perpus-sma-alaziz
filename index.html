@@ -1,0 +1,1877 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Perpustakaan SMA AL-AZIZ Bangil</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  
+  <style>
+    :root {
+      --primary-color: #0f5132;
+      --secondary-color: #198754;
+      --accent-color: #ffc107;
+      --bg-light: #f4f7f6;
+    }
+    body {
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      background-color: var(--bg-light);
+      color: #2b3445;
+    }
+    .navbar-brand { font-weight: 700; letter-spacing: -0.5px; }
+    .bg-alaziz { background: linear-gradient(135deg, #0b3d24 0%, #198754 100%); }
+    
+    /* Katalog Book Card */
+    .book-card {
+      border: none;
+      border-radius: 14px;
+      transition: all 0.25s ease;
+      cursor: pointer;
+      overflow: hidden;
+      background: #fff;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.04);
+    }
+    .book-card:hover {
+      transform: translateY(-6px);
+      box-shadow: 0 12px 24px rgba(15, 81, 50, 0.15);
+    }
+    .book-cover {
+      height: 240px;
+      object-fit: cover;
+      width: 100%;
+      background-color: #e9ecef;
+    }
+
+    /* Admin Sidebar */
+    .sidebar {
+      min-height: calc(100vh - 56px);
+      background: #ffffff;
+      border-right: 1px solid #e2e8f0;
+    }
+    .sidebar .nav-link {
+      color: #4a5568;
+      font-weight: 500;
+      padding: 12px 18px;
+      border-radius: 10px;
+      margin-bottom: 4px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      cursor: pointer;
+    }
+    .sidebar .nav-link:hover, .sidebar .nav-link.active {
+      background-color: #e8f5e9;
+      color: var(--primary-color);
+      font-weight: 600;
+    }
+
+    /* Kartu Anggota Ukuran ATM */
+    .atm-card {
+      width: 340px;
+      height: 215px;
+      border-radius: 12px;
+      background: linear-gradient(135deg, #0b3d24 0%, #157347 65%, #d4af37 150%);
+      color: white;
+      padding: 14px;
+      position: relative;
+      box-shadow: 0 6px 15px rgba(0,0,0,0.15);
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      page-break-inside: avoid;
+      overflow: hidden;
+    }
+    .atm-header {
+      border-bottom: 1px solid rgba(255,255,255,0.25);
+      padding-bottom: 6px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .atm-photo {
+      width: 68px;
+      height: 82px;
+      object-fit: cover;
+      border-radius: 6px;
+      border: 2px solid #fff;
+      background: #fff;
+    }
+    .atm-qr-box {
+      background: #fff;
+      padding: 4px;
+      border-radius: 6px;
+      display: inline-block;
+    }
+
+    /* Label QR Code Buku Fisik */
+    .book-label-card {
+      width: 245px;
+      height: 120px;
+      border: 1.5px dashed #333;
+      border-radius: 8px;
+      padding: 8px 10px;
+      background: #fff;
+      color: #000;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      page-break-inside: avoid;
+    }
+    .book-label-qr {
+      flex-shrink: 0;
+      background: #fff;
+      padding: 2px;
+    }
+    .book-label-info {
+      overflow: hidden;
+      line-height: 1.25;
+    }
+
+    /* Mode Cetak Dinamis (Kartu Anggota atau Label Buku) */
+    @media print {
+      body * { visibility: hidden; }
+      
+      body.printing-cards #print-area,
+      body.printing-cards #print-area * { visibility: visible; }
+      body.printing-cards #print-area {
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 100%;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 15px;
+      }
+      .atm-card {
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+        box-shadow: none;
+        border: 1px solid #ccc;
+      }
+
+      body.printing-labels #print-label-area,
+      body.printing-labels #print-label-area * { visibility: visible; }
+      body.printing-labels #print-label-area {
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 100%;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+      }
+    }
+
+    #reader-jurnal video, #reader-trans video {
+      width: 100% !important;
+      max-height: 420px;
+      object-fit: cover;
+      border-radius: 10px;
+    }
+    #reader-jurnal, #reader-trans { min-height: 180px; }
+
+    /* Loader Overlay */
+    #loading-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(255,255,255,0.85);
+      z-index: 9999;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      flex-direction: column;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Loading Overlay -->
+  <div id="loading-overlay">
+    <div class="spinner-border text-success" style="width: 3rem; height: 3rem;" role="status"></div>
+    <div class="mt-2 fw-semibold text-success" id="loading-text">Memproses data...</div>
+  </div>
+
+  <!-- Top Navigation Bar -->
+  <nav class="navbar navbar-expand-lg navbar-dark bg-alaziz sticky-top shadow-sm">
+    <div class="container-fluid px-4">
+      <a class="navbar-brand d-flex align-items-center gap-2" href="#" onclick="switchMainView('katalog')">
+        <i class="bi bi-book-half fs-4 text-warning"></i>
+        <span>PERPUSTAKAAN SMA AL-AZIZ BANGIL</span>
+      </a>
+      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navMenu">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+      <div class="collapse navbar-collapse" id="navMenu">
+        <ul class="navbar-nav ms-auto gap-2">
+          <li class="nav-item">
+            <button class="btn btn-sm btn-outline-light" onclick="switchMainView('katalog')">
+              <i class="bi bi-grid"></i> Katalog Buku
+            </button>
+          </li>
+          <li class="nav-item">
+            <button class="btn btn-sm btn-warning text-dark fw-semibold" onclick="switchMainView('jurnal')">
+              <i class="bi bi-qr-code-scan"></i> Jurnal Pengunjung
+            </button>
+          </li>
+          <li class="nav-item">
+            <button class="btn btn-sm btn-light text-success fw-semibold" onclick="switchMainView('admin')">
+              <i class="bi bi-shield-lock"></i> Halaman Admin
+            </button>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </nav>
+
+  <!-- ===================================================================== -->
+  <!-- HALAMAN 1: KATALOG BUKU PUBLIK                                        -->
+  <!-- ===================================================================== -->
+  <div id="view-katalog" class="container py-4">
+    <div class="p-4 mb-4 rounded-4 bg-white shadow-sm d-flex flex-column flex-md-row justify-content-between align-items-center gap-3">
+      <div>
+        <h3 class="fw-bold text-success mb-1">Katalog Koleksi Perpustakaan</h3>
+        <p class="text-muted mb-0">Temukan buku fisik maupun E-Book digital SMA AL-AZIZ Bangil</p>
+      </div>
+      <div class="w-100" style="max-width: 380px;">
+        <div class="input-group">
+          <span class="input-group-text bg-light border-end-0"><i class="bi bi-search"></i></span>
+          <input type="text" id="search-katalog" class="form-control border-start-0 bg-light" placeholder="Cari judul buku atau pengarang..." onkeyup="filterKatalog()">
+        </div>
+      </div>
+    </div>
+
+    <div class="row g-4" id="katalog-grid"></div>
+  </div>
+
+  <!-- Modal Detail Buku & Tombol E-Book -->
+  <div class="modal fade" id="modalDetailBuku" tabindex="-1">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+      <div class="modal-content border-0 rounded-4">
+        <div class="modal-header bg-alaziz text-white">
+          <h5 class="modal-title fw-bold">Detail Informasi Buku</h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body p-4">
+          <div class="row g-4">
+            <div class="col-md-4 text-center">
+              <img id="det-cover" src="" class="img-fluid rounded-3 shadow-sm" style="max-height: 300px; object-fit: cover;">
+            </div>
+            <div class="col-md-8">
+              <span id="det-kode" class="badge bg-success-subtle text-success mb-2"></span>
+              <h4 id="det-judul" class="fw-bold mb-1"></h4>
+              <p id="det-pengarang" class="text-muted mb-3"></p>
+              <table class="table table-sm table-borderless">
+                <tr><td width="130" class="text-muted">Penerbit</td><td id="det-penerbit" class="fw-medium"></td></tr>
+                <tr><td class="text-muted">Tahun Terbit</td><td id="det-tahun" class="fw-medium"></td></tr>
+                <tr><td class="text-muted">ISBN</td><td id="det-isbn" class="fw-medium"></td></tr>
+                <tr><td class="text-muted">Lokasi Rak</td><td id="det-rak" class="fw-medium"></td></tr>
+                <tr><td class="text-muted">Stok Tersedia</td><td><span id="det-stok" class="badge bg-primary"></span></td></tr>
+              </table>
+              <div id="det-ebook-area" class="mt-3 pt-3 border-top"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal PDF Reader E-Book -->
+  <div class="modal fade" id="modalEbookReader" tabindex="-1">
+    <div class="modal-dialog modal-xl modal-dialog-centered">
+      <div class="modal-content border-0 rounded-4" style="height: 90vh;">
+        <div class="modal-header bg-dark text-white py-2">
+          <h6 class="modal-title" id="reader-title"><i class="bi bi-file-earmark-pdf text-danger me-2"></i>Membaca E-Book</h6>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body p-0">
+          <iframe id="ebook-iframe" src="" width="100%" height="100%" frameborder="0" allow="autoplay"></iframe>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===================================================================== -->
+  <!-- HALAMAN 3: JURNAL PENGUNJUNG (STANDALONE SCANNER)                     -->
+  <!-- ===================================================================== -->
+  <div id="view-jurnal" class="container py-4 d-none">
+    <div class="row g-4">
+      <div class="col-lg-5">
+        <div class="card border-0 shadow-sm rounded-4 p-4 text-center">
+          <h4 class="fw-bold text-success mb-1">Buku Tamu Digital</h4>
+          <p class="text-muted small mb-3">Arahkan QR Code Kartu Anggota Anda ke kamera</p>
+          
+          <div id="reader-jurnal" class="rounded-3 overflow-hidden border mb-3" style="width: 100%; min-height: 260px; background: #000;"></div>
+          
+          <div class="d-flex justify-content-center gap-2 mb-3">
+            <button class="btn btn-success btn-sm" onclick="startJurnalScanner()"><i class="bi bi-camera-video"></i> Aktifkan Kamera</button>
+            <button class="btn btn-outline-secondary btn-sm" onclick="stopJurnalScanner()"><i class="bi bi-stop-circle"></i> Matikan</button>
+          </div>
+
+          <div class="input-group input-group-sm">
+            <input type="text" id="manual-jurnal-kode" class="form-control" placeholder="Atau ketik NIS/NIP manual...">
+            <button class="btn btn-primary" onclick="submitKunjungan(document.getElementById('manual-jurnal-kode').value)">Catat</button>
+          </div>
+
+          <div id="jurnal-alert" class="alert mt-3 d-none mb-0"></div>
+        </div>
+      </div>
+
+      <div class="col-lg-7">
+        <div class="card border-0 shadow-sm rounded-4 p-4">
+          <div class="d-flex justify-content-between align-items-center mb-3">
+            <h5 class="fw-bold mb-0"><i class="bi bi-people-fill text-success me-2"></i>Pengunjung Hari Ini</h5>
+            <span class="badge bg-success" id="count-pengunjung-hari-ini">0 Pengunjung</span>
+          </div>
+          <div class="table-responsive">
+            <table class="table table-hover align-middle">
+              <thead class="table-light">
+                <tr>
+                  <th>Jam</th>
+                  <th>Kode</th>
+                  <th>Nama Anggota</th>
+                  <th>Status</th>
+                  <th>Kelas</th>
+                </tr>
+              </thead>
+              <tbody id="tbody-jurnal-hari-ini"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===================================================================== -->
+  <!-- HALAMAN 2: ADMIN PENGELOLA PERPUSTAKAAN                               -->
+  <!-- ===================================================================== -->
+  <div id="view-admin" class="d-none">
+    <!-- Form Login Admin -->
+    <div id="admin-login-box" class="container py-5">
+      <div class="row justify-content-center">
+        <div class="col-md-5 col-lg-4">
+          <div class="card border-0 shadow rounded-4 p-4">
+            <div class="text-center mb-4">
+              <div class="bg-success-subtle text-success rounded-circle d-inline-flex p-3 mb-2">
+                <i class="bi bi-person-badge fs-2"></i>
+              </div>
+              <h4 class="fw-bold">Login Pengelola</h4>
+              <p class="text-muted small">Perpustakaan SMA AL-AZIZ Bangil</p>
+            </div>
+            <form onsubmit="handleAdminLogin(event)">
+              <div class="mb-3">
+                <label class="form-label small fw-semibold">Username</label>
+                <input type="text" id="login-user" class="form-control" required placeholder="Masukkan username">
+              </div>
+              <div class="mb-3">
+                <label class="form-label small fw-semibold">Password</label>
+                <input type="password" id="login-pass" class="form-control" required placeholder="Masukkan password">
+              </div>
+              <button type="submit" class="btn btn-success w-100 fw-semibold py-2">Masuk ke Dashboard</button>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Workspace Admin (Setelah Login) -->
+    <div id="admin-workspace" class="container-fluid d-none">
+      <div class="row">
+        <!-- Sidebar 8 Menu -->
+        <div class="col-md-3 col-lg-2 sidebar p-3">
+          <div class="small text-uppercase text-muted fw-bold mb-2 px-2">Menu Utama</div>
+          <nav class="nav flex-column">
+            <a class="nav-link active" id="menu-dashboard" onclick="switchAdminTab('dashboard')"><i class="bi bi-speedometer2"></i> Dashboard</a>
+            <a class="nav-link" id="menu-transaksi" onclick="switchAdminTab('transaksi')"><i class="bi bi-arrow-left-right"></i> Transaksi</a>
+            <a class="nav-link" id="menu-buku" onclick="switchAdminTab('buku')"><i class="bi bi-journal-bookmark"></i> Kelola Buku</a>
+            <a class="nav-link" id="menu-anggota" onclick="switchAdminTab('anggota')"><i class="bi bi-people"></i> Kelola Anggota</a>
+            <a class="nav-link" id="menu-denda" onclick="switchAdminTab('denda')"><i class="bi bi-cash-coin"></i> Denda Keterlambatan</a>
+            <a class="nav-link" id="menu-lap-pinjam" onclick="switchAdminTab('lap-pinjam')"><i class="bi bi-file-earmark-bar-graph"></i> Laporan Peminjaman</a>
+            <a class="nav-link" id="menu-lap-pengunjung" onclick="switchAdminTab('lap-pengunjung')"><i class="bi bi-file-earmark-person"></i> Laporan Pengunjung</a>
+            <a class="nav-link" id="menu-kartu" onclick="switchAdminTab('kartu')"><i class="bi bi-person-vcard"></i> Cetak Kartu Anggota</a>
+            <hr>
+            <a class="nav-link text-danger" onclick="logoutAdmin()"><i class="bi bi-box-arrow-left"></i> Keluar</a>
+          </nav>
+        </div>
+
+        <!-- Konten Dinamis Admin -->
+        <div class="col-md-9 col-lg-10 p-4">
+
+          <!-- 1. TAB DASHBOARD -->
+          <div id="admin-tab-dashboard" class="admin-section">
+            <h4 class="fw-bold mb-4">Dashboard Perpustakaan</h4>
+            <div class="row g-3 mb-4">
+              <div class="col-sm-6 col-xl-3">
+                <div class="card border-0 shadow-sm rounded-4 p-3 bg-white">
+                  <div class="text-muted small">Total Judul Buku</div>
+                  <h3 class="fw-bold text-success mb-0" id="stat-buku">0</h3>
+                </div>
+              </div>
+              <div class="col-sm-6 col-xl-3">
+                <div class="card border-0 shadow-sm rounded-4 p-3 bg-white">
+                  <div class="text-muted small">Total Anggota</div>
+                  <h3 class="fw-bold text-primary mb-0" id="stat-anggota">0</h3>
+                </div>
+              </div>
+              <div class="col-sm-6 col-xl-3">
+                <div class="card border-0 shadow-sm rounded-4 p-3 bg-white">
+                  <div class="text-muted small">Sedang Dipinjam</div>
+                  <h3 class="fw-bold text-warning mb-0" id="stat-pinjam">0</h3>
+                </div>
+              </div>
+              <div class="col-sm-6 col-xl-3">
+                <div class="card border-0 shadow-sm rounded-4 p-3 bg-white">
+                  <div class="text-muted small">Total Kunjungan</div>
+                  <h3 class="fw-bold text-info mb-0" id="stat-kunjungan">0</h3>
+                </div>
+              </div>
+            </div>
+
+            <div class="row g-4">
+              <div class="col-lg-6">
+                <div class="card border-0 shadow-sm rounded-4 p-4">
+                  <h6 class="fw-bold mb-3">Grafik Peminjaman Buku (Tahun Ini)</h6>
+                  <canvas id="chartPeminjaman" height="200"></canvas>
+                </div>
+              </div>
+              <div class="col-lg-6">
+                <div class="card border-0 shadow-sm rounded-4 p-4">
+                  <h6 class="fw-bold mb-3">Grafik Kunjungan Perpustakaan (Tahun Ini)</h6>
+                  <canvas id="chartKunjungan" height="200"></canvas>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- 2. TAB TRANSAKSI (PINJAM & KEMBALI) -->
+          <div id="admin-tab-transaksi" class="admin-section d-none">
+            <h4 class="fw-bold mb-3">Transaksi Sirkulasi Buku</h4>
+            <ul class="nav nav-pills mb-3" id="pills-tab" role="tablist">
+              <li class="nav-item">
+                <button class="nav-link active" data-bs-toggle="pill" data-bs-target="#tab-pinjam">Peminjaman Buku</button>
+              </li>
+              <li class="nav-item">
+                <button class="nav-link" data-bs-toggle="pill" data-bs-target="#tab-kembali">Pengembalian Buku</button>
+              </li>
+            </ul>
+
+            <div class="tab-content">
+              <!-- Tab Pinjam -->
+              <div class="tab-pane fade show active" id="tab-pinjam">
+                <div class="card border-0 shadow-sm rounded-4 p-4 mb-4">
+                  <div class="row g-3 align-items-end">
+                    <div class="col-md-4">
+                      <label class="form-label small fw-bold">Kode Anggota (NIS / NIP)</label>
+                      <div class="input-group">
+                        <input type="text" id="pinjam-kode-anggota" class="form-control" placeholder="Scan / ketik NIS/NIP">
+                        <button class="btn btn-outline-success" type="button" onclick="openTransScanner('pinjam-kode-anggota')">
+                          <i class="bi bi-qr-code-scan"></i> Pindai QR
+                        </button>
+                      </div>
+                    </div>
+                    <div class="col-md-4">
+                      <label class="form-label small fw-bold">Kode Buku</label>
+                      <div class="input-group">
+                        <input type="text" id="pinjam-kode-buku" class="form-control" placeholder="Scan / ketik kode buku">
+                        <button class="btn btn-outline-success" type="button" onclick="openTransScanner('pinjam-kode-buku')">
+                          <i class="bi bi-qr-code-scan"></i> Pindai QR
+                        </button>
+                      </div>
+                    </div>
+                    <div class="col-md-4">
+                      <button class="btn btn-success w-100 fw-semibold" onclick="submitPinjam()">
+                        <i class="bi bi-check-circle me-1"></i> Catat Peminjaman
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Tab Kembali -->
+              <div class="tab-pane fade" id="tab-kembali">
+                <div class="card border-0 shadow-sm rounded-4 p-4 mb-4">
+                  <div class="row g-3 align-items-end">
+                    <div class="col-md-4">
+                      <label class="form-label small fw-bold">Kode Anggota (NIS / NIP)</label>
+                      <div class="input-group">
+                        <input type="text" id="kembali-kode-anggota" class="form-control" placeholder="Scan / ketik NIS/NIP">
+                        <button class="btn btn-outline-primary" type="button" onclick="openTransScanner('kembali-kode-anggota')">
+                          <i class="bi bi-qr-code-scan"></i> Pindai QR
+                        </button>
+                      </div>
+                    </div>
+                    <div class="col-md-4">
+                      <label class="form-label small fw-bold">Kode Buku</label>
+                      <div class="input-group">
+                        <input type="text" id="kembali-kode-buku" class="form-control" placeholder="Scan / ketik kode buku">
+                        <button class="btn btn-outline-primary" type="button" onclick="openTransScanner('kembali-kode-buku')">
+                          <i class="bi bi-qr-code-scan"></i> Pindai QR
+                        </button>
+                      </div>
+                    </div>
+                    <div class="col-md-4">
+                      <button class="btn btn-primary w-100 fw-semibold" onclick="submitKembali()">
+                        <i class="bi bi-arrow-return-left me-1"></i> Catat Pengembalian
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Tabel Riwayat Transaksi -->
+            <div class="card border-0 shadow-sm rounded-4 p-4">
+              <h6 class="fw-bold mb-3">Data Peminjaman & Pengembalian</h6>
+              <div class="table-responsive">
+                <table class="table table-hover align-middle small">
+                  <thead class="table-light">
+                    <tr>
+                      <th>Tgl Pinjam</th>
+                      <th>Jatuh Tempo</th>
+                      <th>Anggota</th>
+                      <th>Buku</th>
+                      <th>Tgl Kembali</th>
+                      <th>Status</th>
+                    </tr>
+                  </thead>
+                  <tbody id="tbody-transaksi"></tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+
+          <!-- 3. TAB KELOLA BUKU -->
+          <div id="admin-tab-buku" class="admin-section d-none">
+            <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+              <h4 class="fw-bold mb-0">Kelola Data Buku</h4>
+              <div class="d-flex gap-2">
+                <button class="btn btn-outline-dark" onclick="openModalLabelBuku('ALL')">
+                  <i class="bi bi-qr-code"></i> Cetak Semua Label QR
+                </button>
+                <button class="btn btn-success" onclick="openModalBuku()">
+                  <i class="bi bi-plus-lg"></i> Tambah Buku
+                </button>
+              </div>
+            </div>
+            <div class="card border-0 shadow-sm rounded-4 p-4">
+              <div class="table-responsive">
+                <table class="table table-hover align-middle small">
+                  <thead class="table-light">
+                    <tr>
+                      <th>Kode Buku</th>
+                      <th>Judul</th>
+                      <th>Pengarang</th>
+                      <th>Rak</th>
+                      <th>Tersedia</th>
+                      <th>E-Book</th>
+                      <th>Aksi</th>
+                    </tr>
+                  </thead>
+                  <tbody id="tbody-admin-buku"></tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+
+          <!-- 4. TAB KELOLA ANGGOTA -->
+          <div id="admin-tab-anggota" class="admin-section d-none">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+              <h4 class="fw-bold mb-0">Kelola Data Anggota</h4>
+              <button class="btn btn-success" onclick="openModalAnggota()"><i class="bi bi-person-plus"></i> Tambah Anggota</button>
+            </div>
+            <div class="card border-0 shadow-sm rounded-4 p-4">
+              <div class="table-responsive">
+                <table class="table table-hover align-middle small">
+                  <thead class="table-light">
+                    <tr>
+                      <th>Kode</th>
+                      <th>Nama</th>
+                      <th>Jenis</th>
+                      <th>Kelas</th>
+                      <th>Aksi</th>
+                    </tr>
+                  </thead>
+                  <tbody id="tbody-admin-anggota"></tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+
+          <!-- 5. TAB DENDA KETERLAMBATAN -->
+          <div id="admin-tab-denda" class="admin-section d-none">
+            <h4 class="fw-bold mb-3">Denda Keterlambatan</h4>
+            <div class="card border-0 shadow-sm rounded-4 p-4">
+              <div class="table-responsive">
+                <table class="table table-hover align-middle small">
+                  <thead class="table-light">
+                    <tr>
+                      <th>Kode Anggota</th>
+                      <th>Nama Anggota</th>
+                      <th>Buku Dipinjam</th>
+                      <th>Jatuh Tempo</th>
+                      <th>Nominal Denda</th>
+                      <th>Status</th>
+                      <th>Aksi</th>
+                    </tr>
+                  </thead>
+                  <tbody id="tbody-admin-denda"></tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+
+          <!-- 6. TAB LAPORAN PEMINJAMAN -->
+          <div id="admin-tab-lap-pinjam" class="admin-section d-none">
+            <h4 class="fw-bold mb-3">Laporan Peminjaman Buku</h4>
+            <div class="card border-0 shadow-sm rounded-4 p-4 mb-4">
+              <div class="row g-3 align-items-end">
+                <div class="col-md-4">
+                  <label class="form-label small fw-bold">Dari Tanggal</label>
+                  <input type="date" id="lap-pinjam-awal" class="form-control">
+                </div>
+                <div class="col-md-4">
+                  <label class="form-label small fw-bold">Sampai Tanggal</label>
+                  <input type="date" id="lap-pinjam-akhir" class="form-control">
+                </div>
+                <div class="col-md-4">
+                  <button class="btn btn-danger w-100" onclick="generatePDF('peminjaman')">
+                    <i class="bi bi-file-earmark-pdf-fill me-1"></i> Cetak Rekap PDF
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- 7. TAB LAPORAN PENGUNJUNG -->
+          <div id="admin-tab-lap-pengunjung" class="admin-section d-none">
+            <h4 class="fw-bold mb-3">Laporan Pengunjung Perpustakaan</h4>
+            <div class="card border-0 shadow-sm rounded-4 p-4 mb-4">
+              <div class="row g-3 align-items-end">
+                <div class="col-md-4">
+                  <label class="form-label small fw-bold">Dari Tanggal</label>
+                  <input type="date" id="lap-peng-awal" class="form-control">
+                </div>
+                <div class="col-md-4">
+                  <label class="form-label small fw-bold">Sampai Tanggal</label>
+                  <input type="date" id="lap-peng-akhir" class="form-control">
+                </div>
+                <div class="col-md-4">
+                  <button class="btn btn-danger w-100" onclick="generatePDF('pengunjung')">
+                    <i class="bi bi-file-earmark-pdf-fill me-1"></i> Cetak Rekap PDF
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- 8. TAB CETAK KARTU ANGGOTA -->
+          <div id="admin-tab-kartu" class="admin-section d-none">
+            <h4 class="fw-bold mb-3">Cetak Kartu Anggota Perpustakaan</h4>
+            <div class="card border-0 shadow-sm rounded-4 p-4 mb-4">
+              <div class="row g-3 align-items-end">
+                <div class="col-md-5">
+                  <label class="form-label small fw-bold">Filter Cetak Kartu</label>
+                  <select id="filter-cetak-kartu" class="form-select" onchange="renderPreviewKartu()">
+                    <option value="ALL">Semua Anggota (Cetak Massal)</option>
+                  </select>
+                </div>
+                <div class="col-md-4">
+                  <button class="btn btn-primary w-100" onclick="printKartuAnggota()">
+                    <i class="bi bi-printer-fill me-1"></i> Cetak Kartu Sekarang
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <h6 class="fw-bold text-muted mb-3">Print Preview Kartu (Ukuran Standar ATM):</h6>
+            <div id="print-area" class="d-flex flex-wrap gap-3"></div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL FORM TAMBAH / EDIT BUKU -->
+  <div class="modal fade" id="modalFormBuku" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+      <div class="modal-content rounded-4 border-0">
+        <div class="modal-header bg-alaziz text-white">
+          <h5 class="modal-title" id="modalBukuTitle">Tambah Buku Baru</h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+        </div>
+        <form onsubmit="submitFormBuku(event)">
+          <div class="modal-body p-4">
+            <input type="hidden" id="buku-is-edit" value="false">
+            <input type="hidden" id="buku-kode">
+            <input type="hidden" id="buku-existing-cover">
+            <input type="hidden" id="buku-existing-ebook">
+            <div class="row g-3">
+              <div class="col-md-6">
+                <label class="form-label small fw-bold">Judul Buku *</label>
+                <input type="text" id="buku-judul" class="form-control" required>
+              </div>
+              <div class="col-md-6">
+                <label class="form-label small fw-bold">Pengarang *</label>
+                <input type="text" id="buku-pengarang" class="form-control" required>
+              </div>
+              <div class="col-md-4">
+                <label class="form-label small">Penerbit (Opsional)</label>
+                <input type="text" id="buku-penerbit" class="form-control">
+              </div>
+              <div class="col-md-4">
+                <label class="form-label small">Tahun Terbit (Opsional)</label>
+                <input type="number" id="buku-tahun" class="form-control">
+              </div>
+              <div class="col-md-4">
+                <label class="form-label small">ISBN (Opsional)</label>
+                <input type="text" id="buku-isbn" class="form-control">
+              </div>
+              <div class="col-md-6">
+                <label class="form-label small">Lokasi Rak (Opsional)</label>
+                <input type="text" id="buku-rak" class="form-control" placeholder="Misal: Rak A-02">
+              </div>
+              <div class="col-md-6">
+                <label class="form-label small fw-bold">Jumlah Eksemplar *</label>
+                <input type="number" id="buku-eksemplar" class="form-control" required min="1" value="1">
+              </div>
+              <div class="col-md-6">
+                <label class="form-label small">Unggah Sampul (JPG/PNG)</label>
+                <input type="file" id="buku-file-cover" class="form-control" accept="image/*">
+              </div>
+              <div class="col-md-6">
+                <label class="form-label small">Unggah E-Book (PDF)</label>
+                <input type="file" id="buku-file-ebook" class="form-control" accept="application/pdf">
+              </div>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-light" data-bs-dismiss="modal">Batal</button>
+            <button type="submit" class="btn btn-success">Simpan Buku</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL PRINT PREVIEW LABEL QR BUKU -->
+  <div class="modal fade" id="modalLabelBuku" tabindex="-1">
+    <div class="modal-dialog modal-xl modal-dialog-scrollable">
+      <div class="modal-content rounded-4 border-0">
+        <div class="modal-header bg-dark text-white">
+          <h5 class="modal-title"><i class="bi bi-qr-code me-2"></i>Print Preview Label QR Code Buku</h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body bg-light">
+          <div class="row g-3 align-items-end mb-4 bg-white p-3 rounded-3 shadow-sm">
+            <div class="col-md-5">
+              <label class="form-label small fw-bold">Pilih Buku</label>
+              <select id="filter-label-buku" class="form-select" onchange="renderPreviewLabelBuku()"></select>
+            </div>
+            <div class="col-md-4">
+              <label class="form-label small fw-bold">Jumlah Salinan Label</label>
+              <select id="mode-jumlah-label" class="form-select" onchange="renderPreviewLabelBuku()">
+                <option value="sesuai_eksemplar">Sesuai Jumlah Eksemplar Buku</option>
+                <option value="1_per_judul">1 Label per Judul Buku</option>
+              </select>
+            </div>
+            <div class="col-md-3">
+              <button class="btn btn-primary w-100 fw-semibold" onclick="printLabelBuku()">
+                <i class="bi bi-printer-fill me-1"></i> Cetak Label
+              </button>
+            </div>
+          </div>
+
+          <div id="print-label-area" class="d-flex flex-wrap gap-2 justify-content-start"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL FORM TAMBAH ANGGOTA -->
+  <div class="modal fade" id="modalFormAnggota" tabindex="-1">
+    <div class="modal-dialog">
+      <div class="modal-content rounded-4 border-0">
+        <div class="modal-header bg-alaziz text-white">
+          <h5 class="modal-title">Tambah Anggota Baru</h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+        </div>
+        <form onsubmit="submitFormAnggota(event)">
+          <div class="modal-body p-4">
+            <div class="mb-3">
+              <label class="form-label small fw-bold">Kode Anggota (NIS atau NIP) *</label>
+              <input type="text" id="ang-kode" class="form-control" required>
+            </div>
+            <div class="mb-3">
+              <label class="form-label small fw-bold">Nama Lengkap *</label>
+              <input type="text" id="ang-nama" class="form-control" required>
+            </div>
+            <div class="mb-3">
+              <label class="form-label small fw-bold">Jenis Anggota *</label>
+              <select id="ang-jenis" class="form-select" required>
+                <option value="Siswa">Siswa</option>
+                <option value="Guru">Guru</option>
+              </select>
+            </div>
+            <div class="mb-3">
+              <label class="form-label small fw-bold">Kelas / Jabatan *</label>
+              <input type="text" id="ang-kelas" class="form-control" placeholder="Contoh: XII IPA 1 / Guru Mapel" required>
+            </div>
+            <div class="mb-3">
+              <label class="form-label small">Foto Anggota</label>
+              <input type="file" id="ang-foto" class="form-control" accept="image/*">
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
+            <button type="submit" class="btn btn-success">Tambah</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL QR SCANNER TRANSAKSI -->
+  <div class="modal fade" id="modalTransScanner" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content rounded-4">
+        <div class="modal-header">
+          <h6 class="modal-title fw-bold">Pindai QR Code</h6>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" onclick="stopTransScanner()"></button>
+        </div>
+        <div class="modal-body text-center">
+          <div id="reader-trans" style="width: 100%;"></div>
+          <div id="trans-scan-status" class="small text-muted mt-2">Menyiapkan kamera...</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- LIBRARIES JAVASCRIPT -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
+
+  <script>
+    // =========================================================================
+    // KONFIGURASI API GOOGLE APPS SCRIPT (WAJIB DIISI URL /exec ANDA)
+    // =========================================================================
+    const GAS_API_URL = "https://script.google.com/macros/s/AKfycbw2sHgtnAWKfbVzECvD7jP0EoB7a72gslS4Jzjm2DByPNd4eBn7Lm2ei1wiNpzExTvk/exec";
+
+    // FUNGSI JEMBATAN API (PENGGANTI google.script.run)
+    async function callGasApi(action, payload = {}) {
+      if (!GAS_API_URL || GAS_API_URL.includes("PASTE_URL_WEB_APP_ANDA_DISINI")) {
+        throw new Error("URL Web App Google Apps Script belum diisi pada konfigurasi GAS_API_URL di index.html!");
+      }
+
+      const response = await fetch(GAS_API_URL, {
+        method: "POST",
+        headers: {
+          "Content-Type": "text/plain;charset=utf-8"
+        },
+        body: JSON.stringify({ action, payload })
+      });
+
+      if (!response.ok) {
+        throw new Error("HTTP Error: " + response.status);
+      }
+
+      const data = await response.json();
+      if (data && data.message && String(data.message).startsWith("Server Error:")) {
+        throw new Error(data.message);
+      }
+      return data;
+    }
+
+    // STATE GLOBAL
+    let allBooks = [];
+    let allMembers = [];
+    let allTransactions = [];
+    let chartPinjamObj = null;
+    let chartKunjunganObj = null;
+    let jurnalScanner = null;
+    let transScanner = null;
+    let targetInputId = "";
+    let jurnalStarting = false;
+    let jurnalActive = false;
+    let jurnalProcessing = false;
+    let transStarting = false;
+    let transActive = false;
+    let transProcessing = false;
+    let transModalInstance = null;
+
+    // INISIALISASI SAAT HALAMAN DIMUAT
+    window.onload = function() {
+      const urlParams = new URLSearchParams(window.location.search);
+      const initialPage = urlParams.get('page') || 'katalog';
+      switchMainView(initialPage);
+    };
+
+    function showLoading(text = "Memproses data...") {
+      document.getElementById('loading-text').innerText = text;
+      document.getElementById('loading-overlay').style.display = 'flex';
+    }
+    function hideLoading() {
+      document.getElementById('loading-overlay').style.display = 'none';
+    }
+
+    // NAVIGASI UTAMA (KATALOG / JURNAL / ADMIN)
+    function switchMainView(view) {
+      stopJurnalScanner();
+      stopTransScanner();
+      const transModalEl = document.getElementById('modalTransScanner');
+      if (transModalEl && transModalEl.classList.contains('show')) {
+        bootstrap.Modal.getOrCreateInstance(transModalEl).hide();
+      }
+      document.getElementById('view-katalog').classList.add('d-none');
+      document.getElementById('view-jurnal').classList.add('d-none');
+      document.getElementById('view-admin').classList.add('d-none');
+
+      const targetView = document.getElementById('view-' + view) ? view : 'katalog';
+      document.getElementById('view-' + targetView).classList.remove('d-none');
+
+      if (targetView === 'katalog') loadKatalog();
+      if (targetView === 'jurnal') {
+        loadPengunjungHariIni();
+      }
+    }
+
+    // =========================================================================
+    // LOGIKA HALAMAN 1: KATALOG BUKU
+    // =========================================================================
+    function loadKatalog() {
+      showLoading("Memuat katalog buku...");
+      callGasApi('getBooks')
+        .then(books => {
+          allBooks = books || [];
+          renderKatalog(allBooks);
+          hideLoading();
+        })
+        .catch(err => {
+          hideLoading();
+          document.getElementById('katalog-grid').innerHTML = 
+            `<div class="col-12 text-center py-5 text-danger">Gagal memuat katalog: ${err.message}</div>`;
+        });
+    }
+
+    function renderKatalog(books) {
+      const grid = document.getElementById('katalog-grid');
+      if (books.length === 0) {
+        grid.innerHTML = `<div class="col-12 text-center py-5 text-muted">Belum ada koleksi buku.</div>`;
+        return;
+      }
+      grid.innerHTML = books.map(b => `
+        <div class="col-6 col-md-4 col-lg-3">
+          <div class="card book-card h-100" onclick="showDetailBuku('${b.kode}')">
+            <div class="position-relative">
+              <img src="${b.cover}" class="book-cover" alt="${b.judul}">
+              ${b.ebook ? '<span class="badge bg-danger position-absolute top-0 end-0 m-2"><i class="bi bi-file-pdf"></i> E-Book</span>' : ''}
+            </div>
+            <div class="card-body p-3">
+              <h6 class="fw-bold text-dark mb-1 text-truncate" title="${b.judul}">${b.judul}</h6>
+              <p class="small text-muted mb-0 text-truncate">${b.pengarang}</p>
+            </div>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function filterKatalog() {
+      const q = document.getElementById('search-katalog').value.toLowerCase();
+      const filtered = allBooks.filter(b => b.judul.toLowerCase().includes(q) || b.pengarang.toLowerCase().includes(q));
+      renderKatalog(filtered);
+    }
+
+    function showDetailBuku(kode) {
+      const b = allBooks.find(x => x.kode === kode);
+      if (!b) return;
+      document.getElementById('det-cover').src = b.cover;
+      document.getElementById('det-kode').innerText = b.kode;
+      document.getElementById('det-judul').innerText = b.judul;
+      document.getElementById('det-pengarang').innerText = "Oleh: " + b.pengarang;
+      document.getElementById('det-penerbit').innerText = b.penerbit || "-";
+      document.getElementById('det-tahun').innerText = b.tahun || "-";
+      document.getElementById('det-isbn').innerText = b.isbn || "-";
+      document.getElementById('det-rak').innerText = b.rak || "-";
+      document.getElementById('det-stok').innerText = `${b.tersedia} dari ${b.eksemplar} Eksemplar`;
+
+      const ebookArea = document.getElementById('det-ebook-area');
+      if (b.ebook) {
+        ebookArea.innerHTML = `
+          <button class="btn btn-danger fw-semibold" onclick="openEbookReader('${b.judul.replace(/'/g, "\\'")}', '${b.ebook}')">
+            <i class="bi bi-book-half me-2"></i> Baca E-Book (PDF Reader)
+          </button>`;
+      } else {
+        ebookArea.innerHTML = `<span class="text-muted small"><i class="bi bi-info-circle"></i> Versi E-Book belum tersedia untuk buku ini.</span>`;
+      }
+      new bootstrap.Modal(document.getElementById('modalDetailBuku')).show();
+    }
+
+    function openEbookReader(judul, url) {
+      bootstrap.Modal.getInstance(document.getElementById('modalDetailBuku')).hide();
+      document.getElementById('reader-title').innerText = "Membaca E-Book: " + judul;
+      document.getElementById('ebook-iframe').src = url;
+      new bootstrap.Modal(document.getElementById('modalEbookReader')).show();
+    }
+
+    // =========================================================================
+    // QR SCANNER - JURNAL PENGUNJUNG
+    // =========================================================================
+    async function startQrScannerInstance(scanner, config, onSuccess) {
+      const cameras = await Html5Qrcode.getCameras();
+      if (!cameras || cameras.length === 0) {
+        throw new Error("Tidak ada kamera yang terdeteksi pada perangkat ini.");
+      }
+      const preferred = cameras.find(camera =>
+        /back|rear|environment|belakang/i.test(camera.label || "")
+      ) || cameras[0];
+
+      await scanner.start(preferred.id, config, onSuccess, () => {});
+    }
+
+    function normalizeQrText(rawValue) {
+      let value = String(rawValue == null ? "" : rawValue).trim();
+      if (!value) return "";
+
+      if (value.startsWith("{") && value.endsWith("}")) {
+        try {
+          const obj = JSON.parse(value);
+          const candidate = obj.kode || obj.kodeAnggota || obj.kodeBuku ||
+            obj.nis || obj.nip || obj.id || obj.code;
+          if (candidate != null) value = String(candidate).trim();
+        } catch (e) {}
+      }
+
+      if (/^https?:\/\//i.test(value)) {
+        try {
+          const url = new URL(value);
+          const keys = ["kode", "kodeAnggota", "kodeBuku", "nis", "nip", "id", "code"];
+          let found = "";
+          for (const key of keys) {
+            if (url.searchParams.get(key)) {
+              found = url.searchParams.get(key).trim();
+              break;
+            }
+          }
+          if (found) value = found;
+          else {
+            const parts = url.pathname.split("/").filter(Boolean);
+            if (parts.length) value = decodeURIComponent(parts[parts.length - 1]).trim();
+          }
+        } catch (e) {}
+      }
+      return value.trim();
+    }
+
+    function showJurnalScannerMessage(message, type = "warning") {
+      const box = document.getElementById("jurnal-alert");
+      if (!box) return;
+      box.classList.remove("d-none", "alert-success", "alert-warning", "alert-danger", "alert-info");
+      box.classList.add("alert-" + type);
+      box.textContent = message;
+    }
+
+    async function startJurnalScanner() {
+      if (jurnalActive || jurnalStarting) return;
+      if (typeof Html5Qrcode === "undefined") {
+        showJurnalScannerMessage("Library QR Scanner gagal dimuat. Periksa koneksi internet lalu muat ulang halaman.", "danger");
+        return;
+      }
+      if (!window.isSecureContext || !navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+        showJurnalScannerMessage("Kamera membutuhkan HTTPS.", "danger");
+        return;
+      }
+
+      jurnalStarting = true;
+      jurnalActive = true;
+      jurnalProcessing = false;
+      try {
+        if (!jurnalScanner) jurnalScanner = new Html5Qrcode("reader-jurnal");
+        showJurnalScannerMessage("Meminta akses kamera. Izinkan kamera pada browser Anda...", "info");
+
+        await startQrScannerInstance(
+          jurnalScanner,
+          { fps: 10, qrbox: { width: 230, height: 230 }, aspectRatio: 1.0 },
+          (decodedText) => {
+            if (!jurnalActive || jurnalProcessing) return;
+            const kode = normalizeQrText(decodedText);
+            if (!kode) {
+              showJurnalScannerMessage("QR terbaca tetapi tidak berisi kode anggota yang valid.", "danger");
+              return;
+            }
+
+            jurnalProcessing = true;
+            try { jurnalScanner.pause(true); } catch (e) {}
+            submitKunjungan(kode, () => {
+              window.setTimeout(async () => {
+                jurnalProcessing = false;
+                if (jurnalActive && jurnalScanner) {
+                  try { jurnalScanner.resume(); }
+                  catch (err) {
+                    showJurnalScannerMessage("Scanner perlu diaktifkan kembali. Tekan tombol Aktifkan Kamera.", "warning");
+                    await stopJurnalScanner();
+                  }
+                }
+              }, 1800);
+            });
+          }
+        );
+
+        jurnalStarting = false;
+        if (!jurnalActive) await stopJurnalScanner();
+        else showJurnalScannerMessage("Kamera aktif. Arahkan QR Code kartu anggota ke dalam kotak kamera.", "info");
+      } catch (err) {
+        jurnalActive = false;
+        const message = err && err.message ? err.message : String(err);
+        showJurnalScannerMessage("Kamera tidak dapat dijalankan: " + message +
+          ". Periksa izin kamera, tutup aplikasi lain yang memakai kamera, lalu coba lagi.", "danger");
+        if (jurnalScanner) {
+          try { await jurnalScanner.clear(); } catch (e) {}
+          jurnalScanner = null;
+        }
+      } finally {
+        jurnalStarting = false;
+      }
+    }
+
+    async function stopJurnalScanner() {
+      jurnalActive = false;
+      jurnalProcessing = false;
+      if (jurnalStarting) return;
+      const scanner = jurnalScanner;
+      if (!scanner) return;
+      jurnalScanner = null;
+      try {
+        if (scanner.isScanning) await scanner.stop();
+      } catch (err) {
+        console.warn("Gagal menghentikan kamera jurnal:", err);
+      }
+      try { await scanner.clear(); } catch (err) {}
+    }
+
+    function submitKunjungan(kode, callback) {
+      const cleanCode = normalizeQrText(kode);
+      if (!cleanCode) {
+        showJurnalScannerMessage("Masukkan atau pindai kode anggota terlebih dahulu.", "warning");
+        if (callback) callback();
+        return;
+      }
+
+      showLoading("Mencatat kunjungan...");
+      callGasApi('catatKunjungan', { kodeAnggota: cleanCode })
+        .then(res => {
+          hideLoading();
+          if (res && res.success) {
+            showJurnalScannerMessage(res.message, "success");
+            document.getElementById("manual-jurnal-kode").value = "";
+            loadPengunjungHariIni();
+          } else if (res && res.alreadyScanned) {
+            showJurnalScannerMessage(res.message, "warning");
+          } else {
+            showJurnalScannerMessage((res && res.message) || "Kunjungan gagal dicatat.", "danger");
+          }
+          if (callback) callback();
+        })
+        .catch(err => {
+          hideLoading();
+          showJurnalScannerMessage("Gagal menghubungi server: " + (err && err.message ? err.message : err), "danger");
+          if (callback) callback();
+        });
+    }
+
+    function loadPengunjungHariIni() {
+      callGasApi('getVisitorsToday')
+        .then(list => {
+          const visitors = list || [];
+          document.getElementById('count-pengunjung-hari-ini').innerText = visitors.length + " Pengunjung";
+          document.getElementById('tbody-jurnal-hari-ini').innerHTML = visitors.map(v => `
+            <tr>
+              <td><span class="badge bg-light text-dark border">${v.jam}</span></td>
+              <td class="fw-semibold">${v.kode}</td>
+              <td>${v.nama}</td>
+              <td>${v.jenis}</td>
+              <td>${v.kelas}</td>
+            </tr>
+          `).join('');
+        })
+        .catch(err => {
+          console.error("Gagal memuat pengunjung:", err);
+        });
+    }
+
+    // =========================================================================
+    // LOGIKA HALAMAN 2: ADMIN PENGELOLA
+    // =========================================================================
+    function handleAdminLogin(e) {
+      e.preventDefault();
+      const u = document.getElementById('login-user').value;
+      const p = document.getElementById('login-pass').value;
+      showLoading("Memverifikasi akun...");
+      callGasApi('loginAdmin', { username: u, password: p })
+        .then(res => {
+          hideLoading();
+          if (res.success) {
+            document.getElementById('admin-login-box').classList.add('d-none');
+            document.getElementById('admin-workspace').classList.remove('d-none');
+            switchAdminTab('dashboard');
+          } else {
+            alert(res.message);
+          }
+        })
+        .catch(err => {
+          hideLoading();
+          alert("Gagal login: " + err.message);
+        });
+    }
+
+    function logoutAdmin() {
+      document.getElementById('admin-workspace').classList.add('d-none');
+      document.getElementById('admin-login-box').classList.remove('d-none');
+    }
+
+    function switchAdminTab(tab) {
+      document.querySelectorAll('.admin-section').forEach(el => el.classList.add('d-none'));
+      document.querySelectorAll('.sidebar .nav-link').forEach(el => el.classList.remove('active'));
+      
+      document.getElementById('admin-tab-' + tab).classList.remove('d-none');
+      document.getElementById('menu-' + tab).classList.add('active');
+
+      if (tab === 'dashboard') loadDashboard();
+      if (tab === 'transaksi') loadTransaksi();
+      if (tab === 'buku') loadAdminBuku();
+      if (tab === 'anggota') loadAdminAnggota();
+      if (tab === 'denda') loadDenda();
+      if (tab === 'kartu') loadCetakKartu();
+    }
+
+    // --- 1. Dashboard & Grafik ---
+    function loadDashboard() {
+      showLoading("Memuat statistik...");
+      callGasApi('getDashboardStats')
+        .then(stats => {
+          hideLoading();
+          document.getElementById('stat-buku').innerText = stats.totalBuku;
+          document.getElementById('stat-anggota').innerText = stats.totalAnggota;
+          document.getElementById('stat-pinjam').innerText = stats.sedangDipinjam;
+          document.getElementById('stat-kunjungan').innerText = stats.totalKunjungan;
+
+          const bulan = ['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Agu','Sep','Okt','Nov','Des'];
+          if (chartPinjamObj) chartPinjamObj.destroy();
+          if (chartKunjunganObj) chartKunjunganObj.destroy();
+
+          chartPinjamObj = new Chart(document.getElementById('chartPeminjaman'), {
+            type: 'bar',
+            data: {
+              labels: bulan,
+              datasets: [{ label: 'Jumlah Peminjaman', data: stats.pinjamBulanan, backgroundColor: '#198754', borderRadius: 6 }]
+            }
+          });
+
+          chartKunjunganObj = new Chart(document.getElementById('chartKunjungan'), {
+            type: 'line',
+            data: {
+              labels: bulan,
+              datasets: [{ label: 'Jumlah Pengunjung', data: stats.kunjunganBulanan, borderColor: '#0d6efd', backgroundColor: 'rgba(13,110,253,0.1)', fill: true, tension: 0.3 }]
+            }
+          });
+        })
+        .catch(err => {
+          hideLoading();
+          alert("Gagal memuat statistik: " + err.message);
+        });
+    }
+
+    // --- 2. Transaksi & QR Scanner ---
+    function openTransScanner(inputId) {
+      targetInputId = inputId;
+      const modalEl = document.getElementById("modalTransScanner");
+      transModalInstance = bootstrap.Modal.getOrCreateInstance(modalEl);
+
+      modalEl.addEventListener("shown.bs.modal", function onShown() {
+        modalEl.removeEventListener("shown.bs.modal", onShown);
+        startTransScanner();
+      });
+      modalEl.addEventListener("hidden.bs.modal", function onHidden() {
+        modalEl.removeEventListener("hidden.bs.modal", onHidden);
+        stopTransScanner();
+      });
+
+      const status = document.getElementById("trans-scan-status");
+      if (status) status.textContent = "Menyiapkan kamera...";
+      transModalInstance.show();
+    }
+
+    async function startTransScanner() {
+      if (transActive || transStarting) return;
+      if (typeof Html5Qrcode === "undefined") {
+        setTransScannerStatus("Library QR Scanner gagal dimuat. Periksa koneksi internet.", true);
+        return;
+      }
+      if (!window.isSecureContext || !navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+        setTransScannerStatus("Kamera membutuhkan HTTPS.", true);
+        return;
+      }
+
+      transStarting = true;
+      transActive = true;
+      transProcessing = false;
+      try {
+        if (!transScanner) transScanner = new Html5Qrcode("reader-trans");
+        setTransScannerStatus("Meminta akses kamera. Izinkan kamera pada browser...");
+
+        await startQrScannerInstance(
+          transScanner,
+          { fps: 10, qrbox: { width: 230, height: 230 }, aspectRatio: 1.0 },
+          async (decodedText) => {
+            if (!transActive || transProcessing) return;
+            const code = normalizeQrText(decodedText);
+            if (!code) {
+              setTransScannerStatus("QR Code tidak berisi kode yang valid.", true);
+              return;
+            }
+
+            transProcessing = true;
+            const target = document.getElementById(targetInputId);
+            if (!target) {
+              setTransScannerStatus("Kolom tujuan tidak ditemukan. Tutup lalu buka scanner kembali.", true);
+              transProcessing = false;
+              return;
+            }
+
+            target.value = code;
+            target.dispatchEvent(new Event("input", { bubbles: true }));
+            setTransScannerStatus("QR berhasil dibaca: " + code);
+            await stopTransScanner();
+            if (transModalInstance) transModalInstance.hide();
+          }
+        );
+
+        transStarting = false;
+        if (!transActive) await stopTransScanner();
+        else setTransScannerStatus("Kamera aktif. Arahkan QR Code ke dalam kotak kamera.");
+      } catch (err) {
+        transActive = false;
+        const message = err && err.message ? err.message : String(err);
+        setTransScannerStatus("Kamera gagal dijalankan: " + message +
+          ". Periksa izin kamera atau tutup aplikasi lain yang menggunakan kamera.", true);
+        if (transScanner) {
+          try { await transScanner.clear(); } catch (e) {}
+          transScanner = null;
+        }
+      } finally {
+        transStarting = false;
+      }
+    }
+
+    function setTransScannerStatus(message, isError = false) {
+      const el = document.getElementById("trans-scan-status");
+      if (el) {
+        el.textContent = message;
+        el.className = isError ? "small text-danger mt-2" : "small text-muted mt-2";
+      }
+    }
+
+    async function stopTransScanner() {
+      transActive = false;
+      transProcessing = false;
+      if (transStarting) return;
+      const scanner = transScanner;
+      if (!scanner) return;
+      transScanner = null;
+      try {
+        if (scanner.isScanning) await scanner.stop();
+      } catch (err) {
+        console.warn("Gagal menghentikan kamera transaksi:", err);
+      }
+      try { await scanner.clear(); } catch (err) {}
+    }
+
+    function loadTransaksi() {
+      showLoading("Memuat data transaksi...");
+      callGasApi('getTransactions')
+        .then(list => {
+          allTransactions = list || [];
+          document.getElementById('tbody-transaksi').innerHTML = allTransactions.map(t => `
+            <tr>
+              <td>${t.tglPinjam}</td>
+              <td>${t.tglTempo}</td>
+              <td><strong>${t.namaAnggota}</strong><br><span class="text-muted">${t.kodeAnggota}</span></td>
+              <td><strong>${t.judulBuku}</strong><br><span class="text-muted">${t.kodeBuku}</span></td>
+              <td>${t.tglKembali}</td>
+              <td><span class="badge ${t.status === 'Dipinjam' ? 'bg-warning text-dark' : 'bg-success'}">${t.status}</span></td>
+            </tr>
+          `).join('');
+          hideLoading();
+        })
+        .catch(err => {
+          hideLoading();
+          alert("Gagal memuat data transaksi: " + err.message);
+        });
+    }
+
+    function submitPinjam() {
+      const kAnggota = document.getElementById('pinjam-kode-anggota').value;
+      const kBuku = document.getElementById('pinjam-kode-buku').value;
+      if (!kAnggota || !kBuku) return alert("Kode anggota dan kode buku wajib diisi!");
+      
+      showLoading("Menyimpan peminjaman...");
+      callGasApi('prosesPinjam', { kodeAnggota: kAnggota, kodeBuku: kBuku })
+        .then(res => {
+          hideLoading();
+          alert(res.message);
+          if (res.success) {
+            document.getElementById('pinjam-kode-anggota').value = "";
+            document.getElementById('pinjam-kode-buku').value = "";
+            loadTransaksi();
+          }
+        })
+        .catch(err => {
+          hideLoading();
+          alert("Gagal menyimpan peminjaman: " + (err && err.message ? err.message : err));
+        });
+    }
+
+    function submitKembali() {
+      const kAnggota = document.getElementById('kembali-kode-anggota').value;
+      const kBuku = document.getElementById('kembali-kode-buku').value;
+      if (!kAnggota || !kBuku) return alert("Kode anggota dan kode buku wajib diisi!");
+
+      showLoading("Memproses pengembalian...");
+      callGasApi('prosesKembali', { kodeAnggota: kAnggota, kodeBuku: kBuku })
+        .then(res => {
+          hideLoading();
+          alert(res.message);
+          if (res.success) {
+            document.getElementById('kembali-kode-anggota').value = "";
+            document.getElementById('kembali-kode-buku').value = "";
+            loadTransaksi();
+          }
+        })
+        .catch(err => {
+          hideLoading();
+          alert("Gagal memproses pengembalian: " + (err && err.message ? err.message : err));
+        });
+    }
+
+    // --- 3. Kelola Buku & Cetak Label QR Buku ---
+    function loadAdminBuku() {
+      showLoading("Memuat daftar buku...");
+      callGasApi('getBooks')
+        .then(books => {
+          allBooks = books || [];
+          document.getElementById('tbody-admin-buku').innerHTML = allBooks.map(b => `
+            <tr>
+              <td class="fw-bold">${b.kode}</td>
+              <td>${b.judul}</td>
+              <td>${b.pengarang}</td>
+              <td>${b.rak || '-'}</td>
+              <td>${b.tersedia} / ${b.eksemplar}</td>
+              <td>${b.ebook ? '<span class="badge bg-success">Ada</span>' : '<span class="badge bg-secondary">Tidak</span>'}</td>
+              <td>
+                <button class="btn btn-sm btn-outline-dark me-1" title="Cetak Label QR" onclick="openModalLabelBuku('${b.kode}')"><i class="bi bi-qr-code"></i></button>
+                <button class="btn btn-sm btn-outline-primary me-1" onclick="openModalBuku('${b.kode}')"><i class="bi bi-pencil"></i> Ubah</button>
+                <button class="btn btn-sm btn-outline-danger" onclick="hapusBuku('${b.kode}')"><i class="bi bi-trash"></i> Hapus</button>
+              </td>
+            </tr>
+          `).join('');
+          hideLoading();
+        })
+        .catch(err => {
+          hideLoading();
+          alert("Gagal memuat daftar buku: " + err.message);
+        });
+    }
+
+    function openModalBuku(kode = null) {
+      document.getElementById('buku-file-cover').value = "";
+      document.getElementById('buku-file-ebook').value = "";
+      if (kode) {
+        const b = allBooks.find(x => x.kode === kode);
+        document.getElementById('modalBukuTitle').innerText = "Ubah Data Buku";
+        document.getElementById('buku-is-edit').value = "true";
+        document.getElementById('buku-kode').value = b.kode;
+        document.getElementById('buku-judul').value = b.judul;
+        document.getElementById('buku-pengarang').value = b.pengarang;
+        document.getElementById('buku-penerbit').value = b.penerbit;
+        document.getElementById('buku-tahun').value = b.tahun;
+        document.getElementById('buku-isbn').value = b.isbn;
+        document.getElementById('buku-rak').value = b.rak;
+        document.getElementById('buku-eksemplar').value = b.eksemplar;
+        document.getElementById('buku-existing-cover').value = b.cover;
+        document.getElementById('buku-existing-ebook').value = b.ebook;
+      } else {
+        document.getElementById('modalBukuTitle').innerText = "Tambah Buku Baru";
+        document.getElementById('buku-is-edit').value = "false";
+        document.getElementById('buku-kode').value = "";
+        document.getElementById('buku-judul').value = "";
+        document.getElementById('buku-pengarang').value = "";
+        document.getElementById('buku-penerbit').value = "";
+        document.getElementById('buku-tahun').value = "";
+        document.getElementById('buku-isbn').value = "";
+        document.getElementById('buku-rak').value = "";
+        document.getElementById('buku-eksemplar').value = 1;
+        document.getElementById('buku-existing-cover').value = "";
+        document.getElementById('buku-existing-ebook').value = "";
+      }
+      new bootstrap.Modal(document.getElementById('modalFormBuku')).show();
+    }
+
+    function readFileAsBase64(file) {
+      return new Promise((resolve) => {
+        if (!file) return resolve(null);
+        const reader = new FileReader();
+        reader.onload = () => resolve({ name: file.name, type: file.type, data: reader.result });
+        reader.readAsDataURL(file);
+      });
+    }
+
+    async function submitFormBuku(e) {
+      e.preventDefault();
+      showLoading("Mengunggah & menyimpan data buku...");
+      const coverFile = await readFileAsBase64(document.getElementById('buku-file-cover').files[0]);
+      const ebookFile = await readFileAsBase64(document.getElementById('buku-file-ebook').files[0]);
+
+      const form = {
+        isEdit: document.getElementById('buku-is-edit').value === "true",
+        kode: document.getElementById('buku-kode').value,
+        judul: document.getElementById('buku-judul').value,
+        pengarang: document.getElementById('buku-pengarang').value,
+        penerbit: document.getElementById('buku-penerbit').value,
+        tahun: document.getElementById('buku-tahun').value,
+        isbn: document.getElementById('buku-isbn').value,
+        rak: document.getElementById('buku-rak').value,
+        eksemplar: document.getElementById('buku-eksemplar').value,
+        existingCover: document.getElementById('buku-existing-cover').value,
+        existingEbook: document.getElementById('buku-existing-ebook').value,
+        coverFile, ebookFile
+      };
+
+      callGasApi('saveBook', form)
+        .then(res => {
+          hideLoading();
+          bootstrap.Modal.getInstance(document.getElementById('modalFormBuku')).hide();
+          alert(res.message);
+          loadAdminBuku();
+        })
+        .catch(err => {
+          hideLoading();
+          alert("Gagal menyimpan buku: " + err.message);
+        });
+    }
+
+    function hapusBuku(kode) {
+      if (!confirm("Yakin ingin menghapus buku ini?")) return;
+      showLoading("Menghapus buku...");
+      callGasApi('deleteBook', { kode })
+        .then(res => {
+          hideLoading();
+          alert(res.message);
+          loadAdminBuku();
+        })
+        .catch(err => {
+          hideLoading();
+          alert("Gagal menghapus buku: " + err.message);
+        });
+    }
+
+    function openModalLabelBuku(selectedKode = 'ALL') {
+      const select = document.getElementById('filter-label-buku');
+      select.innerHTML = `<option value="ALL">Semua Koleksi Buku (${allBooks.length} Judul)</option>` +
+        allBooks.map(b => `<option value="${b.kode}">${b.kode} - ${b.judul}</option>`).join('');
+      select.value = selectedKode;
+      
+      renderPreviewLabelBuku();
+      new bootstrap.Modal(document.getElementById('modalLabelBuku')).show();
+    }
+
+    function renderPreviewLabelBuku() {
+      const filterKode = document.getElementById('filter-label-buku').value;
+      const modeJumlah = document.getElementById('mode-jumlah-label').value;
+      const targetBooks = filterKode === 'ALL' ? allBooks : allBooks.filter(b => b.kode === filterKode);
+      
+      const area = document.getElementById('print-label-area');
+      let labelList = [];
+
+      targetBooks.forEach(b => {
+        const qty = modeJumlah === 'sesuai_eksemplar' ? Math.max(1, parseInt(b.eksemplar) || 1) : 1;
+        for (let i = 1; i <= qty; i++) {
+          labelList.push({ ...b, copyNum: i, totalCopy: qty });
+        }
+      });
+
+      area.innerHTML = labelList.map((item, idx) => `
+        <div class="book-label-card">
+          <div class="book-label-qr" id="qr-book-label-${idx}"></div>
+          <div class="book-label-info">
+            <div style="font-size: 8px; font-weight: 700; color: #0f5132; text-transform: uppercase;">PERPUSTAKAAN SMA AL-AZIZ</div>
+            <div style="font-size: 11px; font-weight: 700; margin: 2px 0;" class="text-truncate" title="${item.judul}">${item.judul}</div>
+            <div style="font-size: 10px; font-weight: 700; font-family: monospace; background: #f1f3f5; padding: 1px 4px; border-radius: 3px; display: inline-block;">${item.kode}</div>
+            <div style="font-size: 9px; color: #555; margin-top: 3px;">
+              Rak: <strong>${item.rak || '-'}</strong> | Eks: ${item.copyNum}/${item.totalCopy}
+            </div>
+          </div>
+        </div>
+      `).join('');
+
+      labelList.forEach((item, idx) => {
+        new QRCode(document.getElementById(`qr-book-label-${idx}`), {
+          text: String(item.kode),
+          width: 76,
+          height: 76,
+          correctLevel: QRCode.CorrectLevel.M
+        });
+      });
+    }
+
+    function printLabelBuku() {
+      document.body.classList.remove('printing-cards');
+      document.body.classList.add('printing-labels');
+      window.print();
+    }
+
+    // --- 4. Kelola Anggota ---
+    function loadAdminAnggota() {
+      showLoading("Memuat data anggota...");
+      callGasApi('getMembers')
+        .then(members => {
+          allMembers = members || [];
+          document.getElementById('tbody-admin-anggota').innerHTML = allMembers.map(m => `
+            <tr>
+              <td class="fw-bold">${m.kode}</td>
+              <td><img src="${m.foto}" class="rounded-circle me-2" width="32" height="32" style="object-fit:cover;">${m.nama}</td>
+              <td>${m.jenis}</td>
+              <td>${m.kelas}</td>
+              <td>
+                <button class="btn btn-sm btn-outline-danger" onclick="hapusAnggota('${m.kode}')"><i class="bi bi-trash"></i> Hapus</button>
+              </td>
+            </tr>
+          `).join('');
+          hideLoading();
+        })
+        .catch(err => {
+          hideLoading();
+          alert("Gagal memuat data anggota: " + err.message);
+        });
+    }
+
+    function openModalAnggota() {
+      document.getElementById('ang-kode').value = "";
+      document.getElementById('ang-nama').value = "";
+      document.getElementById('ang-kelas').value = "";
+      document.getElementById('ang-foto').value = "";
+      new bootstrap.Modal(document.getElementById('modalFormAnggota')).show();
+    }
+
+    async function submitFormAnggota(e) {
+      e.preventDefault();
+      showLoading("Menyimpan data anggota...");
+      const fotoFile = await readFileAsBase64(document.getElementById('ang-foto').files[0]);
+      const form = {
+        kode: document.getElementById('ang-kode').value,
+        nama: document.getElementById('ang-nama').value,
+        jenis: document.getElementById('ang-jenis').value,
+        kelas: document.getElementById('ang-kelas').value,
+        fotoFile
+      };
+      callGasApi('saveMember', form)
+        .then(res => {
+          hideLoading();
+          alert(res.message);
+          if (res.success) {
+            bootstrap.Modal.getInstance(document.getElementById('modalFormAnggota')).hide();
+            loadAdminAnggota();
+          }
+        })
+        .catch(err => {
+          hideLoading();
+          alert("Gagal menyimpan anggota: " + err.message);
+        });
+    }
+
+    function hapusAnggota(kode) {
+      if (!confirm("Hapus anggota ini?")) return;
+      showLoading("Menghapus...");
+      callGasApi('deleteMember', { kode })
+        .then(res => {
+          hideLoading();
+          loadAdminAnggota();
+        })
+        .catch(err => {
+          hideLoading();
+          alert("Gagal menghapus anggota: " + err.message);
+        });
+    }
+
+    // --- 5. Denda Keterlambatan ---
+    function loadDenda() {
+      showLoading("Memuat data denda...");
+      callGasApi('getTransactions')
+        .then(list => {
+          const telat = (list || []).filter(t => t.denda > 0);
+          document.getElementById('tbody-admin-denda').innerHTML = telat.map(t => `
+            <tr>
+              <td>${t.kodeAnggota}</td>
+              <td>${t.namaAnggota}</td>
+              <td>${t.judulBuku}</td>
+              <td>${t.tglTempo}</td>
+              <td class="fw-bold text-danger">Rp ${t.denda.toLocaleString('id-ID')}</td>
+              <td><span class="badge ${t.statusDenda === 'Lunas' ? 'bg-success' : 'bg-danger'}">${t.statusDenda}</span></td>
+              <td>
+                ${t.statusDenda !== 'Lunas' && t.status === 'Dikembalikan'
+                  ? `<button class="btn btn-sm btn-success" onclick="konfirmasiLunas('${t.id}')">Tandai Lunas</button>`
+                  : (t.status === 'Dipinjam' ? '<span class="text-muted small">Buku belum kembali</span>' : '<i class="bi bi-check-all text-success"></i> Selesai')}
+              </td>
+            </tr>
+          `).join('') || `<tr><td colspan="7" class="text-center text-muted py-3">Tidak ada data denda keterlambatan.</td></tr>`;
+          hideLoading();
+        })
+        .catch(err => {
+          hideLoading();
+          alert("Gagal memuat data denda: " + err.message);
+        });
+    }
+
+    function konfirmasiLunas(id) {
+      if (!confirm("Tandai denda ini LUNAS? Tindakan ini bersifat permanen dan tidak dapat dibatalkan.")) return;
+      showLoading("Memperbarui status denda...");
+      callGasApi('lunasiDenda', { idTransaksi: id })
+        .then(res => {
+          hideLoading();
+          alert(res.message);
+          loadDenda();
+        })
+        .catch(err => {
+          hideLoading();
+          alert("Gagal memperbarui denda: " + err.message);
+        });
+    }
+
+    // --- 6 & 7. Laporan Rekap PDF dengan Kop Sekolah ---
+    function generatePDF(jenis) {
+      const tglAwal = document.getElementById(jenis === 'peminjaman' ? 'lap-pinjam-awal' : 'lap-peng-awal').value;
+      const tglAkhir = document.getElementById(jenis === 'peminjaman' ? 'lap-pinjam-akhir' : 'lap-peng-akhir').value;
+      if (!tglAwal || !tglAkhir) return alert("Silakan pilih rentang tanggal laporan terlebih dahulu!");
+
+      showLoading("Menyusun laporan PDF...");
+      callGasApi('getLaporanData', { jenis, tglAwal, tglAkhir })
+        .then(data => {
+          hideLoading();
+          const { jsPDF } = window.jspdf;
+          const doc = new jsPDF();
+
+          // KOP SURAT PERPUSTAKAAN SMA AL-AZIZ BANGIL
+          doc.setFontSize(14);
+          doc.setFont("helvetica", "bold");
+          doc.text("PERPUSTAKAAN SMA AL-AZIZ BANGIL", 105, 16, { align: "center" });
+          doc.setFontSize(10);
+          doc.setFont("helvetica", "normal");
+          doc.text("Jl. Raya Bangil - Pasuruan, Jawa Timur | Sistem Informasi Perpustakaan Digital", 105, 22, { align: "center" });
+          doc.setLineWidth(0.8);
+          doc.line(14, 26, 196, 26);
+
+          // Judul Laporan
+          doc.setFontSize(12);
+          doc.setFont("helvetica", "bold");
+          const judulLap = jenis === 'peminjaman' ? "REKAP LAPORAN PEMINJAMAN BUKU" : "REKAP LAPORAN PENGUNJUNG PERPUSTAKAAN";
+          doc.text(judulLap, 105, 35, { align: "center" });
+          doc.setFontSize(9);
+          doc.setFont("helvetica", "normal");
+          doc.text(`Periode: ${tglAwal} s/d ${tglAkhir}`, 105, 41, { align: "center" });
+
+          if (jenis === 'peminjaman') {
+            const rows = (data || []).map((d, i) => [i + 1, d.tglPinjam, d.kodeAnggota, d.namaAnggota, d.judulBuku, d.tglKembali, d.status]);
+            doc.autoTable({
+              startY: 46,
+              head: [['No', 'Tgl Pinjam', 'Kode', 'Nama Anggota', 'Judul Buku', 'Tgl Kembali', 'Status']],
+              body: rows,
+              theme: 'grid',
+              headStyles: { fillColor: [15, 81, 50] }
+            });
+          } else {
+            const rows = (data || []).map((d, i) => [i + 1, d.tanggal, d.jam, d.kode, d.nama, d.jenis, d.kelas]);
+            doc.autoTable({
+              startY: 46,
+              head: [['No', 'Tanggal', 'Jam', 'Kode', 'Nama Pengunjung', 'Status', 'Kelas']],
+              body: rows,
+              theme: 'grid',
+              headStyles: { fillColor: [15, 81, 50] }
+            });
+          }
+
+          doc.save(`Laporan_${jenis}_SMA_AlAziz_${tglAwal}_${tglAkhir}.pdf`);
+        })
+        .catch(err => {
+          hideLoading();
+          alert("Gagal membuat laporan PDF: " + err.message);
+        });
+    }
+
+    // --- 8. Cetak Kartu Anggota (Ukuran ATM + QR Code + Print Preview) ---
+    function loadCetakKartu() {
+      showLoading("Menyiapkan data kartu...");
+      callGasApi('getMembers')
+        .then(members => {
+          allMembers = members || [];
+          const select = document.getElementById('filter-cetak-kartu');
+          select.innerHTML = `<option value="ALL">Semua Anggota (Cetak Massal - ${allMembers.length} Kartu)</option>` +
+            allMembers.map(m => `<option value="${m.kode}">${m.kode} - ${m.nama} (${m.kelas})</option>`).join('');
+          renderPreviewKartu();
+          hideLoading();
+        })
+        .catch(err => {
+          hideLoading();
+          alert("Gagal memuat data kartu: " + err.message);
+        });
+    }
+
+    function renderPreviewKartu() {
+      const filterVal = document.getElementById('filter-cetak-kartu').value;
+      const list = filterVal === 'ALL' ? allMembers : allMembers.filter(m => m.kode === filterVal);
+      const area = document.getElementById('print-area');
+
+      area.innerHTML = list.map((m, idx) => `
+        <div class="atm-card">
+          <div class="atm-header">
+            <div>
+              <div style="font-size: 9px; letter-spacing: 0.5px; opacity: 0.9;">KARTU ANGGOTA PERPUSTAKAAN</div>
+              <div style="font-size: 12px; font-weight: 700;">SMA AL-AZIZ BANGIL</div>
+            </div>
+            <i class="bi bi-book-half fs-5 text-warning"></i>
+          </div>
+          <div class="d-flex align-items-center justify-content-between my-auto pt-1">
+            <div class="d-flex align-items-center gap-2">
+              <img src="${m.foto}" class="atm-photo" crossorigin="anonymous">
+              <div>
+                <div style="font-size: 13px; font-weight: 700; line-height: 1.2;">${m.nama}</div>
+                <div style="font-size: 11px; color: #ffe082; font-weight: 600;">${m.kode}</div>
+                <div style="font-size: 10px; opacity: 0.9;">${m.jenis} • ${m.kelas}</div>
+              </div>
+            </div>
+            <div class="atm-qr-box" id="qr-card-${idx}"></div>
+          </div>
+          <div style="font-size: 8px; opacity: 0.8; text-align: right;">Berlaku selama menjadi warga sekolah</div>
+        </div>
+      `).join('');
+
+      list.forEach((m, idx) => {
+        new QRCode(document.getElementById(`qr-card-${idx}`), {
+          text: String(m.kode),
+          width: 58,
+          height: 58,
+          correctLevel: QRCode.CorrectLevel.M
+        });
+      });
+    }
+
+    function printKartuAnggota() {
+      document.body.classList.remove('printing-labels');
+      document.body.classList.add('printing-cards');
+      window.print();
+    }
+  </script>
+</body>
+</html>
